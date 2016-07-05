@@ -1,7 +1,9 @@
 package boston_court
 
+import "sync"
+
 type Court struct {
-	Entrance chan struct{}
+	Entrance chan interface{}
 	ImmigrantOut chan Immigrant
 	SpectatorOut chan Spectator
 	JudgeOut chan Judge
@@ -10,26 +12,28 @@ type Court struct {
 	immigrantCount int
 	spectatorCount int
 
-	immigrantBench []Immigrant
-	spectatorBench []Spectator
+	immigrantBench map[*Immigrant]bool
+	spectatorBench map[*Spectator]bool
 
 	CourtName string
 	seq int
+	WG sync.WaitGroup
 }
 
 func NewCourt(courtName string) Court {
 	return Court{
-		Entrance: make(chan struct{}),
+		Entrance: make(chan interface{}),
 		ImmigrantOut: make(chan Immigrant),
 		SpectatorOut: make(chan Spectator),
 		JudgeOut: make(chan Judge),
 		CertificateChan: make(chan Certificate),
 		immigrantCount: 0,
 		spectatorCount: 0,
-		immigrantBench: make([]Immigrant, 0, 10),
-		spectatorBench: make([]Spectator, 0, 10),
+		immigrantBench: make(map[*Immigrant]bool),
+		spectatorBench: make(map[*Spectator]bool),
 		CourtName: courtName,
 		seq: 0,
+		WG: sync.WaitGroup{},
 	}
 }
 
@@ -39,28 +43,52 @@ func (court Court) Run() {
 		case person := <- court.Entrance:
 			switch person.(type) {
 			case Immigrant:
-				court.immigrantBench = append(court.immigrantBench, person)
+				immigrant, ok := person.(Immigrant)
+
+				if !ok {
+					Error.Println("Cannot convert to type Immigrant")
+				}
+				court.immigrantBench[&immigrant] = true
 				court.immigrantCount++
+				Info.Printf("Immigrant %s has entered", person)
 			case Spectator:
-				court.spectatorBench = append(court.spectatorBench, person)
+				spectator, ok := person.(Spectator)
+
+				if !ok {
+					Error.Println("Cannot convert to type Spectator")
+				}
+				court.spectatorBench[&spectator] = true
 				court.spectatorCount++
+				Info.Printf("Spectator %s has entered", person)
 			case Judge:
 				// Block entrance channel
 				court.Entrance = nil
+				Info.Printf("Judge %s has entered", person)
 			}
-		case spectator := court.SpectatorOut:
-			
+		case spectator := <- court.SpectatorOut:
+			Info.Printf("Spectator %s has quit", spectator)
+			delete(court.spectatorBench, &spectator)
+		case judge := <- court.JudgeOut:
+			court.GrantCertificates(judge)
+			Info.Printf("Judge %s has quit", judge)
+			// Restore entrance channel
+			court.Entrance = make(chan interface{})
+		case immigrant := <- court.ImmigrantOut:
+			Info.Printf("Immigrant %s has quit", immigrant)
+			delete(court.immigrantBench, &immigrant)
 		}
 	}
 }
 
-func (court Court) AssignCertificates() {
-	for immigrant := range court.immigrantBench {
+func (court Court) GrantCertificates(judge Judge) {
+	Info.Printf("Judge %s grant ceritifactes for all Immigrants", judge)
+	for immigrant, _ := range court.immigrantBench {
+		Info.Printf("Grant certificate for %s", immigrant)
 		immigrant.CertificateChannel <- NewCertificate(court)
 	}
 }
 
 func (court Court) GetUUID() int {
-	court.seq++
+	court.seq += 1
 	return court.seq
 }

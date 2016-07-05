@@ -4,10 +4,10 @@ import "fmt"
 
 type Spectator struct {
 	Name string
-	Court Court
+	Court *Court
 }
 
-func NewSpectator(name string, court Court) {
+func NewSpectator(name string, court *Court) Spectator {
 	return Spectator{
 		Name: name,
 		Court: court,
