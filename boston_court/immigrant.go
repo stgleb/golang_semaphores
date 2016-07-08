@@ -22,12 +22,10 @@ func (immigrant Immigrant) String() string {
 }
 
 func (immigrant Immigrant) Run() {
-	immigrant.Court.WG.Add(1)
 	immigrant.Court.Entrance <- immigrant
 	immigrant.cert = <- immigrant.CertificateChannel
 	Info.Printf("Immigrant %s has obtained certificate %s", immigrant, immigrant.cert)
 	immigrant.Court.ImmigrantOut <- immigrant
-	immigrant.Court.WG.Done()
 }
 
 

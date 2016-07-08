@@ -1,15 +1,15 @@
 package boston_court
 
-import "sync"
 
 type Court struct {
 	Entrance chan interface{}
 	ImmigrantOut chan Immigrant
 	SpectatorOut chan Spectator
+	Exit chan Immigrant
 	JudgeOut chan Judge
 	CertificateChan chan Certificate
 
-	immigrantCount int
+	ImmigrantCount int
 	spectatorCount int
 
 	immigrantBench map[*Immigrant]bool
@@ -17,7 +17,6 @@ type Court struct {
 
 	CourtName string
 	seq int
-	WG sync.WaitGroup
 }
 
 func NewCourt(courtName string) Court {
@@ -25,15 +24,15 @@ func NewCourt(courtName string) Court {
 		Entrance: make(chan interface{}),
 		ImmigrantOut: make(chan Immigrant),
 		SpectatorOut: make(chan Spectator),
+		Exit: make(chan Immigrant),
 		JudgeOut: make(chan Judge),
 		CertificateChan: make(chan Certificate),
-		immigrantCount: 0,
+		ImmigrantCount: 0,
 		spectatorCount: 0,
 		immigrantBench: make(map[*Immigrant]bool),
 		spectatorBench: make(map[*Spectator]bool),
 		CourtName: courtName,
 		seq: 0,
-		WG: sync.WaitGroup{},
 	}
 }
 
@@ -49,7 +48,7 @@ func (court Court) Run() {
 					Error.Println("Cannot convert to type Immigrant")
 				}
 				court.immigrantBench[&immigrant] = true
-				court.immigrantCount++
+				court.ImmigrantCount++
 				Info.Printf("Immigrant %s has entered", person)
 			case Spectator:
 				spectator, ok := person.(Spectator)
@@ -62,6 +61,7 @@ func (court Court) Run() {
 				Info.Printf("Spectator %s has entered", person)
 			case Judge:
 				// Block entrance channel
+				Info.Printf("Length of entrance channel is %d", len(court.Entrance))
 				court.Entrance = nil
 				Info.Printf("Judge %s has entered", person)
 			}
@@ -76,6 +76,7 @@ func (court Court) Run() {
 		case immigrant := <- court.ImmigrantOut:
 			Info.Printf("Immigrant %s has quit", immigrant)
 			delete(court.immigrantBench, &immigrant)
+			court.Exit <- immigrant
 		}
 	}
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"../../boston_court"
-	"time"
-	"log"
 )
 
 func makeSpectators(court *boston_court.Court) [] boston_court.Spectator {
@@ -33,7 +31,6 @@ func main() {
 	judge := boston_court.NewJudge("Tywin Lannister", court)
 	spectators := makeSpectators(&court)
 	immigrants := makeImmigrants(&court)
-	go court.Run()
 
 	for _, spectator := range spectators {
 		go spectator.Run()
@@ -44,7 +41,17 @@ func main() {
 	}
 
 	go judge.Run()
-	// Wait until all immigrants take certificate.
-	time.Sleep(time.Millisecond * 2000)
-	log.Println(court.WG)
+	// Start main loop
+	go court.Run()
+
+	// Deadlock prone solution as far as some immigrants
+	// can be "lost" in channel
+	//for i := 0;i < len(immigrants);i++{
+	//	<- court.Exit
+	//}
+	//
+	select {
+	case <- court.Exit:
+		break
+	}
 }

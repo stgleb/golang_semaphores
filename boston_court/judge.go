@@ -3,7 +3,7 @@ package boston_court
 import "fmt"
 
 type Judge struct {
-	Name string
+	Name  string
 	Court Court
 }
 
@@ -19,7 +19,8 @@ func NewJudge(name string, court Court) Judge {
 }
 
 func (judge Judge) Run() {
-	judge.Court.Entrance <- judge
-	randSleep(20, 30)
-	judge.Court.JudgeOut <- judge
+	for {
+		judge.Court.Entrance <- judge
+		judge.Court.JudgeOut <- judge
+	}
 }
