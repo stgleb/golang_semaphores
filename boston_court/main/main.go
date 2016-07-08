@@ -46,12 +46,12 @@ func main() {
 
 	// Deadlock prone solution as far as some immigrants
 	// can be "lost" in channel
-	for i := 0;i < len(immigrants);i++{
-		<- court.Exit
-	}
-
-	//select {
-	//case <- court.Exit:
-	//	break
+	//for i := 0;i < len(immigrants);i++{
+	//	<- court.Exit
 	//}
+
+	select {
+	case <- court.Exit:
+		break
+	}
 }

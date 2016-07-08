@@ -61,7 +61,7 @@ func (court Court) Run() {
 				Info.Printf("Spectator %s has entered", person)
 			case Judge:
 				// Block entrance channel
-				Info.Printf("Length of entrance channel is %d", len(court.Entrance))
+				// NOTE: Bad for reusing channel
 				court.Entrance = nil
 				Info.Printf("Judge %s has entered", person)
 			}
