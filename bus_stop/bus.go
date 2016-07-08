@@ -48,7 +48,5 @@ func (bus *Bus) Run() {
 }
 
 func delay() {
-	select {
-	case <-time.After(time.Millisecond * 100):
-	}
+	time.Sleep(time.Millisecond * 100)
 }
