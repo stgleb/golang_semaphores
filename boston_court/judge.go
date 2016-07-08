@@ -1,6 +1,8 @@
 package boston_court
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Judge struct {
 	Name  string

@@ -22,7 +22,12 @@ func (immigrant Immigrant) String() string {
 }
 
 func (immigrant Immigrant) Run() {
-	immigrant.Court.Entrance <- immigrant
+	Info.Printf("Immigrant %s has come to country", immigrant)
+	// Proof that immigrant has successfully entered to court
+	select {
+		case immigrant.Court.Entrance <- immigrant:
+			Info.Printf("Immigrant %s has entered", immigrant)
+	}
 	immigrant.cert = <- immigrant.CertificateChannel
 	Info.Printf("Immigrant %s has obtained certificate %s", immigrant, immigrant.cert)
 	immigrant.Court.ImmigrantOut <- immigrant
