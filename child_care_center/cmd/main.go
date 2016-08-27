@@ -32,39 +32,29 @@ func CreateAdults(count int) []child_care_center.Adult {
 	return adults
 }
 
-func RunChildren(center child_care_center.ChildCareCenter,
-	children []child_care_center.Child) {
+func main() {
+	center := child_care_center.NewChildCenter()
+	children := CreateChildren(30)
+	adults := CreateAdults(10)
+	wg.Add(len(adults))
+	go center.Run()
+
+	for i := range adults {
+		go func(adult child_care_center.Adult) {
+			center.AdultIn <- adult
+			center.AdultOut <- adult
+			wg.Done()
+		}(adults[i])
+	}
+
 	for i := range children {
 
 		go func(child child_care_center.Child) {
 			center.ChildIn <- child
 			center.ChildOut <- child
+			wg.Done()
 		}(children[i])
 	}
 
-	wg.Done()
-}
-
-func RunAdults(center child_care_center.ChildCareCenter,
-	adults []child_care_center.Adult) {
-	for i := range adults {
-
-		go func(adult child_care_center.Adult) {
-			center.AdultIn <- adult
-			center.AdultOut <- adult
-		}(adults[i])
-	}
-
-	wg.Done()
-}
-
-func main() {
-	center := child_care_center.NewChildCenter()
-	children := CreateChildren(30)
-	adults := CreateAdults(10)
-	wg.Add(2)
-	go center.Run()
-	go RunAdults(center, adults)
-	go RunChildren(center, children)
 	wg.Wait()
 }

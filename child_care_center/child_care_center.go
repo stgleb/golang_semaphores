@@ -33,7 +33,7 @@ func (center *ChildCareCenter) Run() {
 	for {
 		select {
 		case child := <-center.ChildIn:
-			log.Println("Enter: %s", child)
+			log.Printf("Enter: %v", child)
 			center.childCount++
 			// Lock children channel
 			if center.childCount == center.adultCount*3 {
@@ -46,7 +46,7 @@ func (center *ChildCareCenter) Run() {
 				center.AdultOut = aOut
 			}
 		case child := <-center.ChildOut:
-			log.Println("Exit: %s", child)
+			log.Printf("Exit: %v", child)
 			// Unlock children in channel
 			if center.childCount == center.adultCount*3 {
 				center.ChildIn = cIn
@@ -59,7 +59,7 @@ func (center *ChildCareCenter) Run() {
 				center.AdultOut = nil
 			}
 		case adult := <-center.AdultIn:
-			log.Println("Enter: %s", adult)
+			log.Printf("Enter: %s", adult)
 			// Unlock children channel since count of adults become bigger
 			if center.childCount == center.adultCount*3 {
 				center.ChildIn = cIn
@@ -71,7 +71,7 @@ func (center *ChildCareCenter) Run() {
 
 			center.adultCount++
 		case adult := <-center.AdultOut:
-			log.Println("Exit: %s", adult)
+			log.Printf("Exit: %v", adult)
 			center.adultCount--
 
 			if center.adultCount == center.childCount/3 {
