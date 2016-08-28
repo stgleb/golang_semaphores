@@ -3,7 +3,7 @@ package main
 import (
 	"../../child_care_center"
 	"github.com/dustinkirkland/golang-petname"
-	"sync"
+	"time"
 )
 
 /*
@@ -11,7 +11,6 @@ State licensing rules require a child-care center to have no more than three
 infants present for each adult
 */
 
-var wg sync.WaitGroup
 
 func CreateChildren(count int) []child_care_center.Child {
 	children := make([]child_care_center.Child, 0, count)
@@ -41,25 +40,24 @@ func main() {
 	center := child_care_center.NewChildCenter()
 	children := CreateChildren(30)
 	adults := CreateAdults(10)
-	wg.Add(len(adults))
 	go center.Run()
+
+
+	for i := range children {
+		go func(child child_care_center.Child) {
+			center.ChildIn <- child
+			time.Sleep(time.Millisecond * 1)
+			center.ChildOut <- child
+		}(children[i])
+	}
 
 	for i := range adults {
 		go func(adult child_care_center.Adult) {
 			center.AdultIn <- adult
+			time.Sleep(time.Millisecond * 1)
 			center.AdultOut <- adult
-			wg.Done()
 		}(adults[i])
 	}
 
-	for i := range children {
-
-		go func(child child_care_center.Child) {
-			center.ChildIn <- child
-			center.ChildOut <- child
-			wg.Done()
-		}(children[i])
-	}
-
-	wg.Wait()
+	<- time.After(time.Millisecond * 100)
 }

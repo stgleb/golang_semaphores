@@ -6,6 +6,6 @@ type Adult struct {
 	Name string
 }
 
-func (adult *Adult) String() string {
+func (adult Adult) String() string {
 	return fmt.Sprintf("Adult: %s", adult.Name)
 }

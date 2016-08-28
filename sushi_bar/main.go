@@ -19,7 +19,7 @@ type Client struct {
 	Name string
 }
 
-func (client *Client) String() string {
+func (client Client) String() string {
 	return fmt.Sprintf("Client %s", client.Name)
 }
 

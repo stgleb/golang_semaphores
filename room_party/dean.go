@@ -6,7 +6,7 @@ type Dean struct {
 	Name string
 }
 
-func (dean *Dean) String() string {
+func (dean Dean) String() string {
 	return fmt.Sprintf("Dean: %s", dean.Name)
 }
 

@@ -6,6 +6,6 @@ type Child struct {
 	Name string
 }
 
-func (child *Child) String() string {
-	return fmt.Sprintf("Child: %s", child.Name)
+func (child Child) String() string {
+	return fmt.Sprintf("Child %s", child.Name)
 }
