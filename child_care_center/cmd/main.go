@@ -6,6 +6,11 @@ import (
 	"sync"
 )
 
+/*
+State licensing rules require a child-care center to have no more than three
+infants present for each adult
+*/
+
 var wg sync.WaitGroup
 
 func CreateChildren(count int) []child_care_center.Child {
