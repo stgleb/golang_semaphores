@@ -39,7 +39,7 @@ func (list BlockingList) Insert(value int) {
 	list.count++
 }
 
-func (list BlockingList) Delete(value int) {
+func (list BlockingList) Delete() {
 	list.Lock()
 	defer list.Unlock()
 
@@ -49,4 +49,16 @@ func (list BlockingList) Delete(value int) {
 
 	list.tail = list.tail.Prev
 	list.tail.Next = nil
+}
+
+func (list BlockingList) Size() int {
+	return list.count
+}
+
+func (list BlockingList) Head() *Node {
+	return list.head
+}
+
+func (list BlockingList) Tail() *Node {
+	return list.tail
 }

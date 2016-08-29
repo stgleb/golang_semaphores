@@ -9,18 +9,18 @@ type AtomicList struct {
 	head *Node
 	tail *Node
 
-	count int
+	count int64
 }
 
 // Search across list
 func (list AtomicList) Search(value int) *Node {
 	cur := list.head
-	pos := 0
+	var pos int64
 
 	for cur != nil {
 		if cur.Value == value {
 			// If element was deleted after been found
-			if atomic.AddInt64(pos, -list.count) > 0 {
+			if atomic.AddInt64(&pos, -list.count) > 0 {
 				return cur
 			} else {
 				return nil
@@ -46,29 +46,43 @@ func (list AtomicList) Insert(value int) {
 
 	// Loop until tail changing successful
 	for {
-		if atomic.CompareAndSwapPointer(&unsafe.Pointer(list.tail),
+		if atomic.CompareAndSwapPointer(
+			(*unsafe.Pointer)(unsafe.Pointer(list.tail)),
 			unsafe.Pointer(currentTail),
 			unsafe.Pointer(node)) {
 			break
 		}
 	}
 
-	atomic.AddInt32(&list.count, 1)
+	atomic.AddInt64(&list.count, 1)
 }
 
 // Delete value from the end of the list
-func (list AtomicList) Delete(value int) {
+func (list AtomicList) Delete() {
 	currentTail := list.tail
 	newHead := list.tail.Prev
 
 	// Loop until tail changing successful
 	for {
-		if atomic.CompareAndSwapPointer(&unsafe.Pointer(list.tail),
+		if atomic.CompareAndSwapPointer(
+			(*unsafe.Pointer)(unsafe.Pointer(list.tail)),
 			unsafe.Pointer(currentTail),
 			unsafe.Pointer(newHead)) {
 			break
 		}
 	}
 
-	atomic.AddInt32(&list.count, -1)
+	atomic.AddInt64(&list.count, -1)
+}
+
+func (list AtomicList) Size() int {
+	return int(list.count)
+}
+
+func (list AtomicList) Head() *Node {
+	return list.head
+}
+
+func (list AtomicList) Tail() *Node {
+	return list.tail
 }
