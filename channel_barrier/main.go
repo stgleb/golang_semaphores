@@ -5,10 +5,12 @@ import (
 )
 
 /*
-	Simple program illustrates stoping producing goroutines by
+	Simple program illustrates stopping producing goroutines by
 	setting chanel to nil, that blocks all goroutines writing to
 	that channel and then unblocking this goroutine by restoring
-	channel value.
+	channel value. This is possible because channel is reference
+	type, and setting channel to nil, will affect all other users
+	of this channel.
 */
 
 const N = 100
