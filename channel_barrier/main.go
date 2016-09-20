@@ -2,42 +2,73 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
 
 /*
 	Simple program illustrates stoping producing goroutines by
-	setting chanel to nil, that blocks all gorout	ines and then
-	restoring chanel value.
+	setting chanel to nil, that blocks all goroutines writing to
+	that channel and then unblocking this goroutine by restoring
+	channel value.
 */
 
+const N = 100
+const DELTA = 10
 
-const N = 10
+func Producer0(ch chan<- int) {
+	for i := 0; i < N; i++ {
+		ch <- 0
+	}
+}
 
-func foo(id int, ch chan int) {
-	fmt.Printf("Hello, i am %d\n",id)
-	ch <- id
+func Producer1(ch chan<- int) {
+	for i := 0; i < N; i++ {
+		ch <- 1
+	}
+}
+
+func Consumer(zeroChan, oneChan chan int) {
+	var zeroCount int
+	var oneCount int
+	var tmp chan int
+
+	for i := 0; i < N; i++ {
+		select {
+		case <-zeroChan:
+			zeroCount++
+			fmt.Printf("zero: %d one: %d\n", zeroCount, oneCount)
+
+			if oneChan == nil {
+				oneChan = tmp
+				fmt.Println("Restore one chan")
+			}
+
+			if zeroCount > oneCount+DELTA {
+				tmp = zeroChan
+				zeroChan = nil
+				fmt.Println("Block zero chan")
+			}
+		case <-oneChan:
+			oneCount++
+			fmt.Printf("zero: %d one: %d\n", zeroCount, oneCount)
+
+			if zeroChan == nil {
+				zeroChan = tmp
+				fmt.Println("Restore zero chan")
+			}
+
+			if oneCount > zeroCount+DELTA {
+				tmp = oneChan
+				oneChan = nil
+				fmt.Println("Block one chan")
+			}
+		}
+	}
 }
 
 func main() {
-	ch := make(chan int)
-	var ch2 chan int
-
-	for i:= 0; i < N;i++ {
-		go foo(i, ch)
-	}
-
-	for i := 0;i < N/2; i++ {
-		<- ch
-	}
-
-	ch2 = ch
-	ch = nil
-	fmt.Println("Stop receiving and sleep")
-	time.Sleep(1)
-	ch = ch2
-
-	for i := 0;i < N/2; i++ {
-		<- ch
-	}
+	zeroChan := make(chan int)
+	oneChan := make(chan int)
+	go Producer0(zeroChan)
+	go Producer1(oneChan)
+	Consumer(zeroChan, oneChan)
 }
